@@ -139,6 +139,12 @@
   (define cube-iter (approx-iter-gen improve))
   (cube-iter 1 0))
 
+;;; Some other playing
+
+(define (ex-1-3b n m o)
+  (define (square a) (* a a))
+  (- (+ (square n) (square m) (square o))
+     (square (min n m o))))
 
 
 
