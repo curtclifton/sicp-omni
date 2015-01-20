@@ -246,12 +246,10 @@
   (define (fast-mult-iter n m acc)
     (cond ((= n 0) acc)
           ((even? n) (fast-mult-iter (halve n) (double m) acc))
-          (else (fast-mult-iter (- n 1) m (+ n acc)))))
-  (cond ((or (= n 0) (= m 0)) 0)
-        ((= m 1) n)
-        (fast-mult n m 0)))
+          (else (fast-mult-iter (- n 1) m (+ m acc)))))
+  (fast-mult-iter n m 0))
         
-(fast-mult 3 2)
+(fast-mult 2 3)
 
 
 
