@@ -176,3 +176,85 @@
 ; (+ (+ (+ (+ (+ 0         (+ 0         (+ 0        (+ 0        (+ (cc 7 0) (cc 6 1)             )))))              (+ (+ 0        (+ 0        (+ 0        (+ (cc 3 0) (cc 2 1)             ))))              (+ (+ 0        1       ) 0        )))             (+ (+ (+ 0        1       ) 0        ) 0        )) 0         ) 0         )
 ; (+ (+ (+ (+ (+ 0         (+ 0         (+ 0        (+ 0        (+ 0        (+ (cc 6 0) (cc 5 1)))))))              (+ (+ 0        (+ 0        (+ 0        (+ 0        (+ (cc 2 0) (cc 1 1))))))              (+ (+ 0        1       ) 0        )))             (+ (+ (+ 0        1       ) 0        ) 0        )) 0         ) 0         )
 ; …
+
+;;; Exercise 1.15
+
+(define (counter f)
+  (define x 0)
+  (define (result n)
+    (set! x (+ 1 x))
+    (pretty-print x)
+    (f n))
+  (define (reset-count)
+    (set! x 0))
+  (cons result reset-count))
+
+(define (cube x) (* x x x))
+(define (p x) (- (* 3 x) (* 4 (cube x))))
+(define counter-reset-pair (counter p))
+(define p-counter (car counter-reset-pair))
+(define reset-count (cdr counter-reset-pair))
+(define (sine angle)
+  (if (not (> (abs angle) 0.1))
+      angle
+      (p-counter (sine (/ angle 3.0)))))
+
+; > (reset-count)
+; > (sine 12.15)
+; 1
+; 2
+; 3
+; 4
+; 5
+; -0.39980345741334
+
+; The sine function takes on the order of the same amount of space and
+; time, since all the calls to p are queued on the stack until the angle
+; is reduced to an approximatable value. Because of the repeated division,
+; the sine function calls itself O(lg a) times before the angle is
+; sufficiently reduced to terminate the recursion.
+ 
+ 
+;;; Exercise 1.16
+
+(define (fast-expt b n)
+  (define (fast-expt-iter b n a)
+    (cond ((< n 0) (error "can't handle so much negativity"))
+          ((= n 0) a)
+          ((even? n) (fast-expt-iter (* b b) (/ n 2) a))
+          (else (fast-expt-iter b (- n 1) (* b a)))))
+  (fast-expt-iter b n 1))
+  
+;;; Exercise 1.17
+
+(define (double n) (+ n n))
+(define (halve n)
+  (cond
+    ((even? n) (/ n 2))
+    (else (error "can only halve even numbers"))))
+    
+(define (mult n m)
+  (cond ((or (= n 0) (= m 0)) 0)
+        ((= n 1) m)
+        ((= m 1) n)
+        ((even? n) (mult (halve n) (double m)))
+        (else (+ m (mult (- n 1) m)))))
+    
+;;; Exercise 1.18
+
+(define (fast-mult n m)
+  (define (fast-mult-iter n m acc)
+    (cond ((= n 0) acc)
+          ((even? n) (fast-mult-iter (halve n) (double m) acc))
+          (else (fast-mult-iter (- n 1) m (+ n acc)))))
+  (cond ((or (= n 0) (= m 0)) 0)
+        ((= m 1) n)
+        (fast-mult n m 0)))
+        
+(fast-mult 3 2)
+
+
+
+  
+
+
