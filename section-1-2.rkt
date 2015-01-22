@@ -249,10 +249,181 @@
           (else (fast-mult-iter (- n 1) m (+ m acc)))))
   (fast-mult-iter n m 0))
         
-(fast-mult 2 3)
+;;; Exercise 1.19
 
+; a_1 ⟵ b_0·q + a_0·q + a_0·p and b_1 ⟵ b_0·p + a_0·q
+; a_2 ⟵ b_1·q + a_1·q + a_1·p and b_2 ⟵ b_1·p + a_1·q
+; substituting:
+; a_2 ⟵ (b_0·p + a_0·q)·q + (b_0·q + a_0·q + a_0·p)·q + (b_0·q + a_0·q + a_0·p)·p and
+; b_2 ⟵ (b_0·p + a_0·q)·p + (b_0·q + a_0·q + a_0·p)·q
+; multiplying out:
+; a_2 ⟵ b_0·p·q + a_0·q^2 + b_0·q^2 + a_0·q^2 + a_0·p·q + b_0·q·p + a_0·q·p + a_0·p^2 and
+; b_2 ⟵ b_0·p^2 + a_0·q·p + b_0·q^2 + a_0·q^2 + a_0·p·q
+; rearranging terms:
+; a_2 ⟵ b_0·p·q + b_0·q^2 + b_0·q·p + a_0·q^2 + a_0·q^2 + a_0·p·q + a_0·q·p + a_0·p^2 and
+; b_2 ⟵ b_0·p^2 + b_0·q^2 + a_0·q·p + a_0·q^2 + a_0·p·q
+; grouping:
+; a_2 ⟵ b_0·(2·p·q + q^2) + a_0·(2·q^2 + 2·p·q + p^2) and [line A]
+; b_2 ⟵ b_0·(p^2 + q^2) + a_0·(2·p·q + q^2)
+; 
+; Pattern matching in the transformation for b_2, let:
+; p' = p^2 + q^2 and q' = 2·p·q + q^2
+; The form of the transformation of a can be rewritten as:
+; a_1 ⟵ b_0·q + a_0·(q + p)
+; So we need the coefficient of a_0 in line A to be p' + q'.
+; Note that p' + q' = 2·q^2 + 2·p·q + p^2 as required.
 
+(define (fib n)
+  (fib-iter 1 0 0 1 n))
+(define (fib-iter a b p q count)
+  (cond ((= count 0) b)
+        ((even? count)
+         (fib-iter a
+                   b
+                   (+ (* p p) (* q q))      ; compute p'
+                   (+ (* 2 p q) (* q q))      ; compute q'
+                   (/ count 2)))
+        (else (fib-iter (+ (* b q) (* a q) (* a p))
+                        (+ (* b p) (* a q))
+                        p
+                        q
+                        (- count 1)))))
 
-  
+;;; Exercise 1.20
 
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
 
+; Normal order evaluation. * indicates remainder operations actually executed.
+; (gcd 206 40)
+; (if (= 40 0) 206 (gcd 40 (remainder 206 40))) ; we can't expand further because of the if special form
+; (if #f 206 (gcd 40 (remainder 206 40)))
+; (gcd 40 (remainder 206 40))
+; (if (= (remainder* 206 40) 0) 40 (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+; (if (= 6 0) 40 (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+; (if #f 40 (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+; (gcd (remainder 206 40) (remainder 40 (remainder 206 40)))
+; (if (= (remainder 40 (remainder* 206 40)) 0) (remainder 206 40) (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+; (if (= (remainder* 40 6) 0) (remainder 206 40) (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+; (if (= 4 0) (remainder 206 40) (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+; (if #f (remainder 206 40) (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+; (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))
+; (if (= (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) 0) (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (if (= (remainder (remainder* 206 40) (remainder 40 (remainder* 206 40))) 0) (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (if (= (remainder 6 (remainder* 40 6)) 0) (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (if (= (remainder* 6 4) 0) (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (if (= 2 0) (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (if #f (remainder 40 (remainder 206 40)) (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+; (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+; (if (= (remainder (remainder 40 (remainder* 206 40)) (remainder (remainder* 206 40) (remainder 40 (remainder* 206 40)))) 0) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (if (= (remainder (remainder* 40 6) (remainder 6 (remainder* 40 6))) 0) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (if (= (remainder 4 (remainder* 6 4)) 0) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (if (= (remainder* 4 2) 0) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (if (= 0 0) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (if #t (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+; (remainder (remainder* 206 40) (remainder 40 (remainder* 206 40)))
+; (remainder 6 (remainder* 40 6))
+; (remainder* 6 4)
+; 2
+; ---> With normal order evaluation, remainder is evaluated 18 times.
+; 
+; (if (= b 0) a (gcd b (remainder a b)))
+; 
+; Applicative order evaluation.
+; (gcd 206 40)
+; (if (= 40 0) 206 (gcd 40 (remainder 206 40))) ; we can't expand further because of the if special form
+; (if #f 206 (gcd 40 (remainder 206 40)))
+; (gcd 40 (remainder* 206 40))
+; (gcd 40 6)
+; (if (= 6 0) 40 (gcd 6 (remainder 40 6)))
+; (if #f 40 (gcd 6 (remainder 40 6)))
+; (gcd 6 (remainder* 40 6))
+; (gcd 6 4)
+; (if (= 4 0) 6 (gcd 4 (remainder 6 4)))
+; (if #f 6 (gcd 4 (remainder 6 4)))
+; (gcd 4 (remainder* 6 4))
+; (gcd 4 2)
+; (if (= 2 0) 4 (gcd 2 (remainder 4 2)))
+; (if #f 4 (gcd 2 (remainder 4 2)))
+; (gcd 2 (remainder* 4 2))
+; (gcd 2 0)
+; (if (= 0 0) 2 (gcd 0 (remainder 2 0)))
+; (if #t 2 (gcd 0 (remainder 2 0)))
+; 2
+; ---> With applicative order evaluation, remainder is evaluated 4 times.
+
+;;; Exercise 1.21
+
+(define (square n) (* n n))
+(define (smallest-divisor n)
+  (find-divisor n 2))
+(define (find-divisor n test-divisor)
+  (cond ((> (square test-divisor) n) n)
+        ((divides? test-divisor n) test-divisor)
+        (else (find-divisor n (+ test-divisor 1)))))
+(define (divides? a b)
+  (= (remainder b a) 0))
+
+; > (smallest-divisor 199)
+; 199
+; > (smallest-divisor 1999)
+; 1999
+; > (smallest-divisor 19999)
+; 7
+
+;;; Exercise 1.22
+
+(define (prime? n)
+  (= n (smallest-divisor n)))
+
+(define (timed-prime-test n)
+;   (newline)
+;   (display n)
+  (start-prime-test n (current-inexact-milliseconds)))
+(define (start-prime-test n start-time)
+  (if (prime? n)
+      (begin 
+        (report-prime n (- (current-inexact-milliseconds) start-time))
+        #t)
+      #f))
+(define (report-prime n elapsed-time)
+  (display n)
+  (display " *** ")
+  (display elapsed-time)
+  (newline))
+
+(define (first-three-primes n)
+  (define (helper n count)
+    (if (= count 3)
+        #t
+        (helper (+ n 2) (if (timed-prime-test n)
+                            (+ count 1)
+                            count))))
+  (helper (if (even? n) (+ n 1) n) 0))
+
+; > (first-three-primes 10000)
+; 10007 *** 0.0078125
+; 10009 *** 0.010009765625
+; 10037 *** 0.0087890625
+; #t
+; > (first-three-primes 100000)
+; 100003 *** 0.02392578125
+; 100019 *** 0.02392578125
+; 100043 *** 0.02392578125
+; #t
+; > (first-three-primes 1000000)
+; 1000003 *** 0.078125
+; 1000033 *** 0.076904296875
+; 1000037 *** 0.077880859375
+; #t
+; > (first-three-primes 10000000)
+; 10000019 *** 0.2470703125
+; 10000079 *** 0.287841796875
+; 10000103 *** 0.379150390625
+; #t
+; > (first-three-primes 100000000)
+; 100000007 *** 0.779052734375
+; 100000037 *** 0.77392578125
+; 100000039 *** 0.77294921875     
