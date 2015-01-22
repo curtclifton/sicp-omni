@@ -359,10 +359,11 @@
 (define (square n) (* n n))
 (define (smallest-divisor n)
   (find-divisor n 2))
+; (define (next n) (+ n 1))
 (define (find-divisor n test-divisor)
   (cond ((> (square test-divisor) n) n)
         ((divides? test-divisor n) test-divisor)
-        (else (find-divisor n (+ test-divisor 1)))))
+        (else (find-divisor n (next test-divisor)))))
 (define (divides? a b)
   (= (remainder b a) 0))
 
@@ -378,16 +379,19 @@
 (define (prime? n)
   (= n (smallest-divisor n)))
 
-(define (timed-prime-test n)
-;   (newline)
-;   (display n)
-  (start-prime-test n (current-inexact-milliseconds)))
-(define (start-prime-test n start-time)
-  (if (prime? n)
-      (begin 
-        (report-prime n (- (current-inexact-milliseconds) start-time))
-        #t)
-      #f))
+; This is modified from the version given in the text. It returns a pair
+; indicating whether the argument is prime and the elapsed time for the
+; test **even if the number is not prime**. It also takes the function used 
+; for testing primality to make exercise 1.24 easier.
+(define (timed-prime-test tester n)
+  (start-prime-test tester n (current-inexact-milliseconds)))
+(define (start-prime-test tester n start-time)
+  (define (elapsed) (- (current-inexact-milliseconds) start-time))
+  (if (tester n)
+      (let ((elapsed-time (elapsed)))
+        (report-prime n elapsed-time)
+        (cons #t elapsed-time))
+      (cons #f (elapsed))))
 (define (report-prime n elapsed-time)
   (display n)
   (display " *** ")
@@ -395,35 +399,213 @@
   (newline))
 
 (define (first-three-primes n)
-  (define (helper n count)
+  (first-three-primes-f prime? n))
+(define (first-three-primes-f tester n)
+  (define (helper n count total-time)
     (if (= count 3)
-        #t
-        (helper (+ n 2) (if (timed-prime-test n)
-                            (+ count 1)
-                            count))))
-  (helper (if (even? n) (+ n 1) n) 0))
+        total-time
+        (let ((result (timed-prime-test tester n)))
+          (helper (+ n 2) 
+                  (if (car result)
+                      (+ count 1)
+                      count)
+                  (+ total-time (cdr result))))))
+  (helper (if (even? n) (+ n 1) n) 0 0))
 
+; Results using the original definition of smallest-divisor above.
+;
+; > (first-three-primes 1000)
+; 1009 *** 0.003173828125
+; 1013 *** 0.001953125
+; 1019 *** 0.001953125
+; 0.014892578125
 ; > (first-three-primes 10000)
-; 10007 *** 0.0078125
-; 10009 *** 0.010009765625
-; 10037 *** 0.0087890625
-; #t
+; 10007 *** 0.008056640625
+; 10009 *** 0.009033203125
+; 10037 *** 0.0078125
+; 0.050048828125
 ; > (first-three-primes 100000)
-; 100003 *** 0.02392578125
-; 100019 *** 0.02392578125
+; 100003 *** 0.02587890625
+; 100019 *** 0.025146484375
 ; 100043 *** 0.02392578125
-; #t
+; 0.126220703125
 ; > (first-three-primes 1000000)
-; 1000003 *** 0.078125
-; 1000033 *** 0.076904296875
-; 1000037 *** 0.077880859375
-; #t
+; 1000003 *** 0.0771484375
+; 1000033 *** 0.075927734375
+; 1000037 *** 0.075927734375
+; 0.2763671875
 ; > (first-three-primes 10000000)
-; 10000019 *** 0.2470703125
-; 10000079 *** 0.287841796875
-; 10000103 *** 0.379150390625
-; #t
+; 10000019 *** 0.239990234375
+; 10000079 *** 0.239013671875
+; 10000103 *** 0.240966796875
+; 1.15283203125
 ; > (first-three-primes 100000000)
-; 100000007 *** 0.779052734375
-; 100000037 *** 0.77392578125
-; 100000039 *** 0.77294921875     
+; 100000007 *** 1.004150390625
+; 100000037 *** 1.5390625
+; 100000039 *** 1.910888671875
+; 4.93701171875
+
+; n     time (ms)  (sqrt n)
+; 10^3  0.015      31.622
+; 10^4  0.050      100
+; 10^5  0.126      316.227
+; 10^6  0.276      1000
+; 10^7  1.153      3162.278
+; 10^8  4.937      10000
+; 
+; > (/ 31.622 0.015)
+; 2108.133333333333
+; > (/ 100 .050)
+; 2000.0
+; > (/ 316.227 0.126)
+; 2509.738095238095
+; > (/ 1000 .276)
+; 3623.188405797101 <--- surprising
+; > (/ 3162.278 1.153)
+; 2742.6522116218557
+; > (/ 10000 4.937)
+; 2025.5215718047396
+
+;;; Exercise 1.23
+
+(define (next n)
+  (if (= n 2)
+      3
+      (+ n 2)))
+
+; Times are about twice as fast, except for the occasional outlier. I suspect
+; garbage collection is messing with the times for large numbers.
+; 
+; > (first-three-primes 100000000)
+; 100000007 *** 0.524169921875
+; 100000037 *** 0.491943359375
+; 100000039 *** 0.4951171875
+; 1.703125
+; > (first-three-primes 100000000)
+; 100000007 *** 0.56591796875
+; 100000037 *** 0.823974609375
+; 100000039 *** 0.580810546875
+; 2.18701171875
+; > (first-three-primes 100000000)
+; 100000007 *** 0.489990234375
+; 100000037 *** 0.4921875
+; 100000039 *** 0.489013671875
+; 1.670166015625
+; > (first-three-primes 100000000)
+; 100000007 *** 0.489990234375
+; 100000037 *** 0.597900390625
+; 100000039 *** 1.0029296875
+; 2.325927734375
+; > (first-three-primes 100000000)
+; 100000007 *** 0.491943359375
+; 100000037 *** 0.494140625
+; 100000039 *** 0.489013671875
+; 1.6630859375
+
+;;; Exercise 1.24
+
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (square (expmod base (/ exp 2) m))
+                    m))
+        (else
+         (remainder (* base (expmod base (- exp 1) m))
+                    m))))
+(define (fermat-test n)
+  (define (try-it a)
+    (= (expmod a n n) a))
+  (try-it (+ 1 (random (- n 1)))))
+(define (fast-prime? n times)
+  (cond ((= times 0) true)
+        ((fermat-test n) (fast-prime? n (- times 1)))
+        (else false)))
+(define (fast-prime-generator times)
+  (define (prime? n)
+    (fast-prime? n times))
+  prime?)
+
+; > (first-three-primes-f (fast-prime-generator 6) 1000)
+; 1009 *** 0.011962890625
+; 1013 *** 0.010986328125
+; 1019 *** 0.010986328125
+; 0.0546875
+; > (first-three-primes-f (fast-prime-generator 6) 10000)
+; 10007 *** 0.013916015625
+; 10009 *** 0.012939453125
+; 10037 *** 0.011962890625
+; 0.0810546875
+; > (first-three-primes-f (fast-prime-generator 6) 100000)
+; 100003 *** 0.01513671875
+; 100019 *** 0.014892578125
+; 100043 *** 0.014892578125
+; 0.1005859375
+; > (first-three-primes-f (fast-prime-generator 6) 1000000)
+; 1000003 *** 0.01806640625
+; 1000033 *** 0.016845703125
+; 1000037 *** 0.01806640625
+; 0.130126953125
+; > (first-three-primes-f (fast-prime-generator 6) 10000000)
+; 10000019 *** 0.02392578125
+; 10000079 *** 0.02392578125
+; 10000103 *** 0.02392578125
+; 0.276611328125
+; > (first-three-primes-f (fast-prime-generator 6) 100000000)
+; 100000007 *** 0.02392578125
+; 100000037 *** 0.02783203125
+; 100000039 *** 0.030029296875
+; 0.189697265625
+;
+; Apart from some GC hiccups, this seems to scale at O(lg n).
+
+
+;;; Exercise 1.25
+
+; Alyssa's use of remainder is going to be expensive. The version we're
+; actually using take remainder as we go, to keep the results of the
+; exponentiation small.
+
+;;; Exercise 1.26
+
+; Louis's expmod recurses twice, once for each argument of the
+; multiplication, doubling the amount of work at each stage.
+
+;;; Exercise 1.27
+
+(define (fermat-test-2 n witness)
+  (define (try-it a)
+    (= (expmod a n n) a))
+  (try-it witness))
+
+(define (ex-1-27 n)
+  (define (helper n challenge)
+    (if (= challenge 1)
+        #t
+        (if (fermat-test-2 n challenge)
+            (fermat-test-2 n (- challenge 1))
+            #f)))
+  (helper n (- n 1)))
+  
+; “The smallest few [Carmichael numbers] are 561, 1105, 1729, 2465,
+; 2821, and 6601”
+; > (ex-1-27 10)
+; #f
+; > (ex-1-27 13)
+; #t
+; > (ex-1-27 19)
+; #t
+; > (ex-1-27 561)
+; #t
+; > (ex-1-27 1105)
+; #t
+; > (ex-1-27 1729)
+; #t
+; > (ex-1-27 2465)
+; #t
+; > (ex-1-27 2821)
+; #t
+; > (ex-1-27 6601)
+; #t
+
+;;; Exercise 1.28
+; Not even going to attempt to parse that problem description.
