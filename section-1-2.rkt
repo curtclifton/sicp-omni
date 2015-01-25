@@ -562,7 +562,7 @@
 ;;; Exercise 1.25
 
 ; Alyssa's use of remainder is going to be expensive. The version we're
-; actually using take remainder as we go, to keep the results of the
+; actually using takes remainder as we go, to keep the results of the
 ; exponentiation small.
 
 ;;; Exercise 1.26
