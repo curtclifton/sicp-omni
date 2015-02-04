@@ -1,5 +1,7 @@
 #lang racket
 
+(provide inc)
+
 (define (inc n) (+ n 1))
 
 (define (double f)

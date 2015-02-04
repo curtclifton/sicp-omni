@@ -1,6 +1,7 @@
 #lang racket
 
-(define (inc n) (+ n 1))
+(require "exercise-1-41.rkt")
+(provide square)
 
 (define (square n) (* n n))
 

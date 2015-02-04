@@ -1,6 +1,9 @@
 #lang racket
 
-(define (square n) (* n n))
+(require "exercise-1-41.rkt")
+(require "exercise-1-42.rkt")
+
+(provide repeated)
 
 (define (repeated f n)
   (define (repeated-iter count accum)

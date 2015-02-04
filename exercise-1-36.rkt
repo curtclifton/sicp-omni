@@ -1,5 +1,7 @@
 #lang racket
 
+(provide fixed-point average-damp)
+
 ;;; exercise 1.36
 
 (define tolerance 0.00001)
