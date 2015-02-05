@@ -7,10 +7,10 @@
 
 (define (repeated f n)
   (define (repeated-iter count accum)
-    (if (= count 1)
+    (if (= count 0)
         accum
         (repeated-iter (- count 1) (compose f accum))))
-  (repeated-iter n f))
+  (repeated-iter n identity))
 
 ((repeated square 2) 5)
 
