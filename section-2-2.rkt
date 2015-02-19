@@ -235,3 +235,59 @@
 (define mobile-2-29-2
   (make-mobile (make-branch 5 2) (make-branch 10 1)))
 
+;;; Exercise 2.30
+
+(define (square-tree-recur tree)
+  (define (square-branches lst accum)
+    (if (null? lst)
+        accum
+        (square-branches (cdr lst) 
+                         (cons (square-tree-recur (car lst))
+                               accum))))
+  (if (list? tree)
+      (reverse (square-branches tree '()))
+      (square tree)))
+
+(define (square-tree-map tree)
+  (if (list? tree)
+      (map square-tree-map tree)
+      (square tree)))
+
+(square-tree-recur
+  (list 1
+        (list 2 (list 3 4) 5)
+        (list 6 7)))
+
+(square-tree-map
+  (list 1
+        (list 2 (list 3 4) 5)
+        (list 6 7)))
+
+;;; Exercise 2.31
+
+(define (tree-map f tree)
+  (define (curried-tree-map subtree)
+    (tree-map f subtree))
+  (if (list? tree)
+      (map curried-tree-map tree)
+      (f tree)))
+
+(define (square-tree tree) (tree-map square tree))
+
+(square-tree
+  (list 1
+        (list 2 (list 3 4) 5)
+        (list 6 7)))
+
+;;; Exercise 2.32
+
+(define (subsets s)
+  (define (cons-car-f lst)
+    (lambda (other) (cons (car lst) other)))
+  (if (null? s)
+      '(())
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (cons-car-f s) rest)))))
+
+; In the base case, the set of all subsets of the empty set is the set containing the empty set.
+; In the recursive case, rest is the set of all subsets of the set formed by removing the first element from s. The result is all the elements of rest unioned with the set of the sets formed by adding the first element of s to each element of rest.
