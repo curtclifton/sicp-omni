@@ -291,3 +291,46 @@
 
 ; In the base case, the set of all subsets of the empty set is the set containing the empty set.
 ; In the recursive case, rest is the set of all subsets of the set formed by removing the first element from s. The result is all the elements of rest unioned with the set of the sets formed by adding the first element of s to each element of rest.
+
+;;; Exercise 2.33
+
+(define (accumulate op initial sequence) (if (null? sequence)
+      initial
+      (op (car sequence)
+          (accumulate op initial (cdr sequence)))))
+
+(define (map-foldr p sequence)
+  (accumulate (lambda (x accum) (cons (p x) accum)) '() sequence))
+(define (append-foldr seq1 seq2) 
+  (accumulate cons seq2 seq1))
+(define (length-foldr sequence)
+  (define (counter x accum)
+    (+ 1 accum))
+  (accumulate counter 0 sequence))
+  
+;;; Exercise 2.34
+
+(define (horner-eval x coefficient-sequence)
+  (accumulate (lambda (this-coeff higher-terms) (+ this-coeff (* x higher-terms)))
+              0
+              coefficient-sequence))
+
+(horner-eval 2 (list 1 3 0 5 0 1))
+
+;;; Exercise 2.35
+
+(define (enumerate-tree tree)
+  (cond ((null? tree) '())
+         ((not (pair? tree)) (list tree))
+         (else (append (enumerate-tree (car tree))
+                       (enumerate-tree (cdr tree))))))
+
+(define (count-leaves t)
+  (accumulate + 0 (map (lambda (x) 1) (enumerate-tree t))))
+
+(count-leaves '(1))
+(count-leaves '(1 2 (3 4)))
+
+
+
+
