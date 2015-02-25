@@ -331,6 +331,40 @@
 (count-leaves '(1))
 (count-leaves '(1 2 (3 4)))
 
+;;; Exercise 2.36
 
+(define (accumulate-n op init seqs)
+  (if (null? (car seqs))
+      '()
+      (cons (accumulate op init (map car seqs))
+            (accumulate-n op init (map cdr seqs)))))
 
+(accumulate-n + 0 '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
 
+;;; Exercise 2.37
+
+(define matrix-2-37 '((1 2 3 4) (4 5 6 6) (6 7 8 9)))
+(define vector-2-37 '(2 4 6 8))
+
+(define (dot-product vector-a vector-b)
+  (accumulate + 0 (map * vector-a vector-b)))
+(dot-product vector-2-37 vector-2-37)
+
+(define (matrix-*-vector matrix vector)
+  (map (lambda (matrix-row) 
+         (dot-product matrix-row vector))
+       matrix))
+(matrix-*-vector matrix-2-37 vector-2-37)
+
+(define (transpose matrix)
+  (accumulate-n cons '() matrix))
+
+(transpose '((1 2) (3 4)))
+(transpose matrix-2-37)
+  
+(define (matrix-*-matrix matrix-a matrix-b)
+  (let ((cols (transpose matrix-b)))
+    (map (lambda (matrix-a-row matrix-b-col)
+           (dot-product matrix-a-row matrix-b-col))
+         cols
+         matrix-a)))
