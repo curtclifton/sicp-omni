@@ -481,3 +481,30 @@
   (filter (lambda (a-pair) (prime? (apply + a-pair)))
           (unique-pairs n)))
 (prime-sum-pairs 6)
+
+;;; Exercise 2.41
+
+; TODO: write unique-triples using unique-pairs to get pairs to which to cons a first elemetn
+
+(display "exercise-2-41")
+(newline)
+
+(define (unique-triples n)
+  (if (< n 3)
+      (error "n must be greater than 2: " n)
+      (flatmap 
+        (lambda (i)
+          (map
+            (lambda (j-k) (append j-k (list i)))
+            (unique-pairs (- i 1))))
+        (range 3 (+ n 1)))))
+
+; (unique-triples 10)
+
+(define (exercise-2-41 n s)
+  (define (matches triple)
+    (= s (apply + triple)))
+  (filter matches (unique-triples n)))
+
+(exercise-2-41 10 7)
+(exercise-2-41 10 12)
