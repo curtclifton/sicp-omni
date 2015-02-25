@@ -364,7 +364,10 @@
   
 (define (matrix-*-matrix matrix-a matrix-b)
   (let ((cols (transpose matrix-b)))
-    (map (lambda (matrix-a-row matrix-b-col)
-           (dot-product matrix-a-row matrix-b-col))
-         cols
+    (map (lambda (matrix-a-row) (matrix-*-vector cols matrix-a-row))
          matrix-a)))
+
+(matrix-*-matrix '((1 2)) '((1) (2)))
+(matrix-*-matrix '((1) (2)) '((1 2)))
+(matrix-*-matrix matrix-2-37 (transpose matrix-2-37))
+(matrix-*-matrix (transpose matrix-2-37) matrix-2-37)
