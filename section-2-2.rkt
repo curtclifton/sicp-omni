@@ -1,5 +1,7 @@
 #lang racket
 
+(require "exercise-1-33.rkt")
+
 ;;; Exercise 2.17
 
 (define (last-pair lst)
@@ -294,10 +296,11 @@
 
 ;;; Exercise 2.33
 
-(define (accumulate op initial sequence) (if (null? sequence)
-      initial
-      (op (car sequence)
-          (accumulate op initial (cdr sequence)))))
+(define (accumulate op initial sequence)
+   (if (null? sequence)
+       initial
+       (op (car sequence)
+           (accumulate op initial (cdr sequence)))))
 
 (define (map-foldr p sequence)
   (accumulate (lambda (x accum) (cons (p x) accum)) '() sequence))
@@ -371,3 +374,110 @@
 (matrix-*-matrix '((1) (2)) '((1 2)))
 (matrix-*-matrix matrix-2-37 (transpose matrix-2-37))
 (matrix-*-matrix (transpose matrix-2-37) matrix-2-37)
+(matrix-*-matrix '((1 2 3) (4 5 6) (7 8 9)) '((1 4 7) (2 5 8) (3 6 9)))
+
+;;; Exercise 2.38
+
+(define (fold-left-book op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op result (car rest))
+              (cdr rest))))
+  (iter initial sequence))
+
+(define (fold-left-racket op initial sequence)
+  (define (iter result rest)
+    (if (null? rest)
+        result
+        (iter (op (car rest) result)
+              (cdr rest))))
+  (iter initial sequence))
+
+
+(foldr / 1 '(1 2 3))
+(fold-left-book / 1 '(1 2 3))
+(fold-left-racket / 1 '(1 2 3))
+(foldl / 1 '(1 2 3))
+
+(foldr list '() '(1 2 3))
+(fold-left-book list '() '(1 2 3))
+(fold-left-racket list '() '(1 2 3))
+(foldl list '() '(1 2 3))
+
+(foldr + 0 '(1 2 3))
+(fold-left-book + 0 '(1 2 3))
+(fold-left-racket + 0 '(1 2 3))
+(foldl + 0 '(1 2 3))
+
+; Commutative functions can be folded either direction.
+
+;;; Exercise 2.39
+
+(define (reverse-with-fold-right sequence)
+  (accumulate 
+    (lambda (element accum) 
+      (append accum (list element))) 
+    '()
+    sequence))
+(define (reverse-with-fold-left sequence)
+  (fold-left-book 
+    (lambda (accum element) (cons element accum)) 
+    '()
+    sequence))
+(define (reverse-with-foldl sequence)
+  (foldl 
+    (lambda (element accum) (cons element accum)) 
+    '()
+    sequence))
+
+
+(reverse-with-fold-right '(1 2 3))
+(reverse-with-fold-left '(1 2 3))
+(reverse-with-foldl '(1 2 3))
+
+;;; Exercise 2.40
+
+(define (flatmap proc sequence)
+  (accumulate append '() (map proc sequence)))
+
+(flatmap (lambda (x) (list x)) '(10 20 30))
+(flatmap (lambda (x) (list x x)) '(10 20 30))
+(flatmap (lambda (x) (list x (* 2 x) (* 3 x))) '(10 20 30))
+
+(define (permutations s)
+  (if (null? s)                    ; empty set?
+      '(())                        ; sequence containing empty set
+      (flatmap (lambda (x)
+                 (map (lambda (p) (cons x p))
+                      (permutations (remove x s))))
+               s)))
+
+(permutations '(1))
+(permutations '(1 2))
+(permutations '(1 2 3))
+
+(display "unique-pairs")
+(newline)
+(define (unique-pairs n)
+  (define (n-through-m n m)
+    (range n (+ 1 m)))
+  (define one-through-n
+    (n-through-m 1 n))
+  (if (< n 2)
+      (error "argument must be greater than 1: " n)
+      (flatmap 
+        (lambda (i)
+          (map 
+            (lambda (j) (list j i))
+            (n-through-m 1 (- i 1))))
+        one-through-n)))
+        
+(unique-pairs 3)
+
+(display "prime-sum-pairs")
+(newline)
+(define (prime-sum-pairs n)
+  (filter (lambda (a-pair) (prime? (apply + a-pair)))
+          (unique-pairs n)))
+(prime-sum-pairs 6)
