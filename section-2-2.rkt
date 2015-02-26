@@ -506,5 +506,6 @@
     (= s (apply + triple)))
   (filter matches (unique-triples n)))
 
-(exercise-2-41 10 7)
+(exercise-2-41 10 6)
 (exercise-2-41 10 12)
+(exercise-2-41 10 27)
