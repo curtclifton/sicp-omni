@@ -642,3 +642,41 @@
 (safe? 2 unsafe-board-2b)
 
 (map print-board (queens 8))
+
+;;; Exercise 2.43
+
+; Louis is re-doing the recursive call for every possible guess at a next position. I don't feel like doing the full-blown analysis, but my gut feeling is that his implementation will take T^8.
+
+;;; Exercise 2.44
+
+; We don't have the painting library, so let's just assume a painter take a frame and does nothing.
+
+(define (wave frame) '())
+(define (rogers frame) '())
+(define (below painter1 painter2)
+  '())
+(define (beside painter1 painter2)
+  '())
+
+(define (right-split painter n) (if (= n 0)
+painter
+(let ((smaller (right-split painter (- n 1))))
+        (beside painter (below smaller smaller)))))
+
+(define (up-split painter n)
+  (if (= n 0)
+      painter
+      (let ((smaller (up-split painter (- n 1))))
+        (below painter (beside smaller smaller)))))
+
+;;; Exercise 2.45
+
+(define (split splitter1 splitter2)
+  (define (helper painter n)
+    (if (= n 0)
+        painter
+        (let ((smaller (helper painter (- n 1))))
+          (splitter1 painter (splitter2 smaller smaller)))))
+  helper)
+
+
