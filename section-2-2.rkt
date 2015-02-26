@@ -2,6 +2,10 @@
 
 (require "exercise-1-33.rkt")
 
+(define (println x)
+  (display x)
+  (newline))
+
 ;;; Exercise 2.17
 
 (define (last-pair lst)
@@ -457,8 +461,7 @@
 (permutations '(1 2))
 (permutations '(1 2 3))
 
-(display "unique-pairs")
-(newline)
+(println "unique-pairs")
 (define (unique-pairs n)
   (define (n-through-m n m)
     (range n (+ 1 m)))
@@ -475,8 +478,7 @@
         
 (unique-pairs 3)
 
-(display "prime-sum-pairs")
-(newline)
+(println "prime-sum-pairs")
 (define (prime-sum-pairs n)
   (filter (lambda (a-pair) (prime? (apply + a-pair)))
           (unique-pairs n)))
@@ -486,8 +488,7 @@
 
 ; TODO: write unique-triples using unique-pairs to get pairs to which to cons a first elemetn
 
-(display "exercise-2-41")
-(newline)
+(println "exercise-2-41")
 
 (define (unique-triples n)
   (if (< n 3)
@@ -509,3 +510,135 @@
 (exercise-2-41 10 6)
 (exercise-2-41 10 12)
 (exercise-2-41 10 27)
+
+;;; Exercise 2.42
+
+; Complete the program by implementing the representation for sets of board positions, including the procedure:
+;; adjoin-position
+; which adjoins a new row-column position to a set of positions, and
+;; empty-board
+; which represents an empty set of positions. You must also write the procedure
+;; safe?
+; which determines for a set of positions, whether the queen in the kth column is safe with respect to the others. (Note that we need only check whether the new queen is safe— the other queens are already guaranteed safe with respect to each other.)
+
+(println "exercise 2.42, 8 queens")
+
+; Let's try representing a board as a list of cons cells, where each cell is a row-column pair
+(define (make-position row column) (cons row column))
+(define (row-of-position position) (car position))
+(define (column-of-position position) (cdr position))
+(define (position-equal? pos1 pos2)
+  (and (= (row-of-position pos1) (row-of-position pos2))
+       (= (column-of-position pos1) (column-of-position pos2))))
+
+;; Derivation of diagonal-matcher
+;   1 2 3 4 5 6 7 8
+; 1   *       *--- (row + col) matches?
+; 2     *   *
+; 3       *
+; 4     *   *
+; 5   *       *
+; 6 *           *
+; 7               *--- (row - col) matches
+; 8
+; 
+; row = 1*col + b ==> row - col = b
+; row = -1*col + b' ==> row + col = b'
+
+(define empty-board '())
+(define (adjoin-position row column board)
+  (cons (make-position row column) board))
+(define (safe? k board)
+  (define kth-column-positions
+    (filter (lambda (position) (= (column-of-position position) k))
+            board))
+  (define (row-occupied? row board)
+    (not (null? (filter (lambda (position) (= (row-of-position position) row))
+                        board))))
+  (define (diagonal-matcher position)
+    (define (interceptor op)
+      (lambda (position)
+        (op (row-of-position position) (column-of-position position))))
+    (define slope-1-intercept (interceptor +))
+    (define slope-2-intercept (interceptor -))
+    (lambda (other-position)
+      (or (= (slope-1-intercept other-position) 
+             (slope-1-intercept position))
+          (= (slope-2-intercept other-position)
+            (slope-2-intercept position)))))
+  (define (same-diagonal-occupied? position board)
+    (not (null? (filter (diagonal-matcher position) board))))
+  (if (not (= 1 (length kth-column-positions)))
+      #f ; trying to put multiple queens in the kth column
+      (let ((kth-queen-position (car kth-column-positions))
+            (board-without-kth-queen 
+              (remove (car kth-column-positions) board)))
+        (and (not (row-occupied? (row-of-position kth-queen-position)
+                                 board-without-kth-queen))
+             (not (same-diagonal-occupied? kth-queen-position
+                                           board-without-kth-queen))))))
+
+(define (contains-queen? position board)
+  (not (null? (filter (lambda (other-position) 
+                        (position-equal? other-position position))
+                      board))))
+(define (print-board board)
+  (define (max-for-selector selector) (foldr max 0 (map selector board)))
+  (define max-row (max-for-selector row-of-position))
+  (define max-column (max-for-selector column-of-position))
+  (define (iterate-columns row column)
+    (if (> column max-column)
+        (newline)
+        (begin
+          (display (if (contains-queen? (make-position row column) board)
+                       "Q"
+                       "-"))
+          (iterate-columns row (+ 1 column)))))
+  (define (iterate-rows row)
+    (if (> row max-row)
+        (begin
+          (newline)
+          board)
+        (begin
+          (iterate-columns row 1)
+          (iterate-rows (+ 1 row)))))
+  (if (eq? board empty-board)
+      (newline)
+      (iterate-rows 1)))
+
+(define (enumerate-interval n m)
+  (range n (+ m 1)))
+
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+          (lambda (positions) (safe? k positions)) 
+          (flatmap
+            (lambda (rest-of-queens) 
+              (map 
+                (lambda (new-row)
+                    (adjoin-position new-row k rest-of-queens))
+                (enumerate-interval 1 board-size)))
+            (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define board1 (adjoin-position 1 1 empty-board))
+(print-board board1)
+
+(define unsafe-board-1 (adjoin-position 2 1 board1))
+(print-board unsafe-board-1)
+
+(define unsafe-board-2a (adjoin-position 1 2 board1))
+(print-board unsafe-board-2a)
+
+(define unsafe-board-2b (adjoin-position 2 2 board1))
+(print-board unsafe-board-2b)
+
+(safe? 1 board1)
+(safe? 1 unsafe-board-1)
+(safe? 2 unsafe-board-2a)
+(safe? 2 unsafe-board-2b)
+
+(map print-board (queens 8))
