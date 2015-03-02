@@ -679,4 +679,61 @@ painter
           (splitter1 painter (splitter2 smaller smaller)))))
   helper)
 
+;;; Exercise 2.46
 
+(define (make-sicp-vector x-coord y-coord)
+  (vector-immutable 'sicp-vector x-coord y-coord))
+(define (sicp-vector? maybe-vector)
+  (and (vector? maybe-vector)
+       (eq? 'sicp-vector (vector-ref maybe-vector 0))))
+(define (sicp-vector-x-coord vector)
+  (vector-ref vector 1))
+(define (sicp-vector-y-coord vector)
+  (vector-ref vector 2))
+
+(define (add-vect v1 v2)
+  (make-sicp-vector (+ (sicp-vector-x-coord v1)
+                       (sicp-vector-x-coord v2))
+                    (+ (sicp-vector-y-coord v1)
+                       (sicp-vector-y-coord v2))))
+(define (scale-vect scale v)
+  (make-sicp-vector (* scale (sicp-vector-x-coord v))
+                    (* scale (sicp-vector-y-coord v))))
+(define (sub-vect v1 v2)
+  (add-vect v1 (scale-vect -1 v2)))
+
+;;; Exercise 2.47
+
+(define (make-frame-list origin edge1 edge2)
+  (list origin edge1 edge2))
+
+(define (make-frame-cons origin edge1 edge2)
+  (cons origin (cons edge1 edge2)))
+
+(define (frame-list-origin frame) car)
+(define (frame-list-edge1 frame) cadr)
+(define (frame-list-edge2 frame) caddr)
+
+(define (frame-cons-origin frame) car)
+(define (frame-cons-edge1 frame) cadr)
+(define (frame-cons-edge2 frame) cddr)
+
+;;; Exercise 2.48
+
+(define (make-segment start-v end-v)
+  (vector-immutable 'segment start-v end-v))
+(define (segment? maybe-segment)
+  (and (vector? maybe-segment)
+       (eq? 'segment (vector-ref maybe-segment 0))))
+(define (start-segment segment)
+  (vector-ref segment 1))
+(define (end-segment segment)
+  (vector-ref segment 2))
+
+;;; Exercise 2.49
+
+; No fucking way.
+
+;;; Exercise 2.50
+
+; Yeah, I'm done with this. The idea is interesting, but without an actual graphics library this is pretty pointless.
