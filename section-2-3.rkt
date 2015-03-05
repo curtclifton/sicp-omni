@@ -84,8 +84,23 @@
                                         non-number-terms)))))))))
   simplify)
 
+(define (associative-simplifier op-symbol)
+  (define (op? expr)
+    (and (pair? expr) (eq? (car expr) op-symbol)))
+  (define (exploder term)
+    (if (op? term)
+        (cdr term)
+        (list term)))
+  (define (simplifier expr)
+    (if (not (op? expr))
+        expr
+        (let ((terms (map simplifier (cdr expr))))
+          (cons op-symbol (foldr append '() (map exploder terms))))))
+  simplifier)
+
 (define (make-sum . as)
-  ((commutative-simplifier + '+ 0 0 (lambda (x) #f)) as))
+  ((associative-simplifier '+)
+   ((commutative-simplifier + '+ 0 0 (lambda (x) #f)) as)))
 (define (sum? x)
   (and (pair? x) (eq? (car x) '+)))
 (define (addend s) (cadr s))
@@ -93,7 +108,8 @@
   ((first-remover '+) s))
 
 (define (make-product . ms)
-  ((commutative-simplifier * '* 1 0 (lambda (x) (= x 0))) ms))
+  ((associative-simplifier '*)
+   ((commutative-simplifier * '* 1 0 (lambda (x) (= x 0))) ms)))
 (define (product? x)
   (and (pair? x) (eq? (car x) '*)))
 (define (multiplier p) (cadr p))
@@ -176,3 +192,12 @@
 (make-product 'x 'y)
 (make-product 1 2 3 4)
 (make-product 1 2 3 4 'x)
+
+(println "deriv")
+(deriv '(* x y (+ x 3)) 'x)
+
+;;; Exercise 2.58
+
+; (a) This is straightforward for binary operators, though I'm disinclined to perform the necessary surgery on the operators above.
+; (b) Implementing operator precedence using just s-expressions is an interesting problem, for later.
+
