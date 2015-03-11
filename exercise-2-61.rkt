@@ -1,5 +1,7 @@
 #lang racket
 
+;;; sets as ordered lists
+
 (define (println x)
   (display x)
   (newline))
