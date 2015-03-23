@@ -121,8 +121,8 @@
   (cond ((null? leaf-set) (error "empty leaf-set"))
         ((null? (cdr leaf-set)) (car leaf-set))
         (else (successive-merge
-                (adjoin-set (make-code-tree (car leaf-set)
-                                            (cadr leaf-set))
+                (adjoin-set (make-code-tree (cadr leaf-set)
+                                            (car leaf-set))
                             (cddr leaf-set))))))
 
 (define (generate-huffman-tree pairs) (successive-merge (make-leaf-set pairs)))
@@ -155,4 +155,16 @@
 
 ; It takes 84 bits to encode the lyrics with our huffman encoding. With this eight symbol alphabet we would need 3 bits per symbol in the lyrics, or 108 bits.
 
+;;; Exercise 2.71
 
+; see exercise-2-71.graffle for drawings
+
+; It takes a single bit for the most frequent symbol and n-1 bits for the least frequent (and for the second least frequent).
+
+;;; Exercise 2.72
+
+; “What is the order of growth of the number of steps needed to encode a symbol? Be sure to include the number of steps needed to search the symbol list at each node encountered. To answer this question in general is difficult. Consider the special case where the relative frequencies of the n symbols are as described in exercise 2.71, and give the order of growth (as a function of n) of the number of steps needed to encode the most frequent and least frequent symbols in the alphabet.”
+
+; With my implementation, trees as in exercise 2.71 represent a best case, since the symbol inclusion check is done once at the beginning, and then only on left branches. Encoding the least frequent symbol requires an O(n) scan of the symbol set, then n-2 O(1) scans of the left branches, walking down the tree. Encoding the most frequent symbol requires an O(n) scan of the symbol set, then 1 O(1) scan of the first left branch. Thus, encoding any symbol for an alphabet like in exercise 2.71 takes O(n).
+
+; For arbitrary Huffman encoding trees, the order of growth for symbol encoding is O(n^2), since the tree is of height O(n) and the worst case scan at each level is O(n). This would happen if generate-huffman-tree produced trees that were mirror images, e.g., by swapping the arguments to make-code-tree in successive-merge.
