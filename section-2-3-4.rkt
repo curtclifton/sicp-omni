@@ -49,10 +49,11 @@
         (else (error "bad bit: CHOOSE-BRANCH" bit))))
 
 
-(define (adjoin-set x set) (cond ((null? set) (list x))
-                                 ((< (weight x) (weight (car set))) (cons x set)) (else (cons (car set)
-                                                                                              (adjoin-set x (cdr set))))))
-
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set) 
+                    (adjoin-set x (cdr set))))))
 
 (define (make-leaf-set pairs) (if (null? pairs)
                                   '()
@@ -66,6 +67,7 @@
 
 ;;;Exercise 2.67
 
+(newline)
 (println "exercise 2.67")
 
 (define sample-tree (make-code-tree (make-leaf 'A 4)
@@ -81,6 +83,9 @@
 (println "(decode sample-message sample-tree) ==> " decoded-message)
 
 ;;; Exercise 2.68
+
+(newline)
+(println "exercse 2.68")
 
 (define (encodes-symbol? sym tree)
   (memq sym (symbols tree)))
@@ -109,15 +114,45 @@
 
 ;;; Exercise 2.69
 
-; (define (generate-huffman-tree pairs) (successive-merge (make-leaf-set pairs)))
+(newline)
+(println "exercse 2.69")
+
+(define (successive-merge leaf-set)
+  (cond ((null? leaf-set) (error "empty leaf-set"))
+        ((null? (cdr leaf-set)) (car leaf-set))
+        (else (successive-merge
+                (adjoin-set (make-code-tree (car leaf-set)
+                                            (cadr leaf-set))
+                            (cddr leaf-set))))))
+
+(define (generate-huffman-tree pairs) (successive-merge (make-leaf-set pairs)))
+
+(make-leaf-set '((a 1) (b 2) (c 1)))
+(successive-merge (make-leaf-set '((a 1) (b 2) (c 1))))
 
 ;;; Exercise 2.70
 
-; A 2 GET2 SHA3 WAH1 BOOM1 JOB2 NA16 YIP9
-; 
-; Get a job
-; Sha na na na na na na na na
-; Get a job
-; Sha na na na na na na na na
-; Wah yip yip yip yip yip yip yip yip yip
-; Sha boom
+(newline)
+(println "exercse 2.70")
+
+(define silhouettes-tree
+  (generate-huffman-tree '((A 2) (GET 2) (SHA 3) (WAH 1) (BOOM 1) (JOB 2) (NA 16) (YIP 9))))
+
+(println "silhouettes-tree: " silhouettes-tree)
+
+(println "GET A JOB: " (encode '(GET A JOB) silhouettes-tree))
+(println "SHA NA NA NA NA NA NA NA NA: " (encode '(SHA NA NA NA NA NA NA NA NA) silhouettes-tree))
+(println "GET A JOB: " (encode '(GET A JOB) silhouettes-tree))
+(println "SHA NA NA NA NA NA NA NA NA: " (encode '(SHA NA NA NA NA NA NA NA NA) silhouettes-tree))
+(println "WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP: " (encode '(WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP) silhouettes-tree))
+(println "SHA BOOM: " (encode '(SHA BOOM) silhouettes-tree))
+
+(define lyrics '(GET A JOB SHA NA NA NA NA NA NA NA NA GET A JOB SHA NA NA NA NA NA NA NA NA WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP SHA BOOM))
+(define encoded-lyrics (encode lyrics silhouettes-tree))
+(println "full lyrics: " encoded-lyrics)
+(println "bit count: " (length encoded-lyrics))
+(println "symbol count: " (length lyrics))
+
+; It takes 84 bits to encode the lyrics with our huffman encoding. With this eight symbol alphabet we would need 3 bits per symbol in the lyrics, or 108 bits.
+
+
