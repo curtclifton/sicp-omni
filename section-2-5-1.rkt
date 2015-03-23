@@ -167,6 +167,13 @@
        (lambda (z1 z2) (tag (mul-complex z1 z2))))
   (put 'div '(complex complex)
        (lambda (z1 z2) (tag (div-complex z1 z2))))
+  ;; -------------------------------------------------------------
+  ;; added in exercise 2.78
+  (put 'real-part '(complex) real-part)
+  (put 'imag-part '(complex) imag-part)
+  (put 'magnitude '(complex) magnitude)
+  (put 'angle '(complex) angle)
+  ;; -------------------------------------------------------------
   (put 'make-from-real-imag 'complex
        (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'complex
@@ -184,7 +191,14 @@
 (install-polar-package)
 (install-complex-package)
 
-;;; Exercise 2.75
+;;; Exercise 2.77
 
 (define figure-2-24 (make-complex-from-real-imag 3 4))
 (magnitude figure-2-24)
+
+; The first application of magnitude routes through apply-generic and strips the 'complex tag. It then looks up the top-level definition of magnitude (installed by the complex package) and applies it. That hits apply-generic again, strips off the rectangular tag and looks up the version of magnitude defined in the rectangular package. That one does the expected math and returns the answer.
+
+;;; Exercise 2.78
+
+; TODO
+
