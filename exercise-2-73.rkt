@@ -35,6 +35,14 @@
 
 (install-symbolic-differentiation)
 
+(deriv '(+ x y) 'x)
+(deriv '(+ x y) 'y)
+(deriv '(+ x y) 'z)
+
+(deriv '(* x y) 'x)
+(deriv '(* x y) 'y)
+(deriv '(* x y) 'z)
+
 ; (c)
 
 (define (install-exponent-rule)
