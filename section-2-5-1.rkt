@@ -228,7 +228,7 @@
 
 ;;; Exercise 2.79
 
-(println "exercise 2.78")
+(println "exercise 2.79")
 
 ;; This is pretty horrible. We have to have internal knowledge of the encoding of all the number types in order to implement this. We need their tags to install the new procedures. We need the structure of rationals to do the comparison. (For the later, we could install top-level numer and denom procedures, but we'd have to go back and edit the original definitions to do that.)
 (define (install-equ)
@@ -262,4 +262,8 @@
 (equ? (make-complex-from-real-imag 0 1) (make-complex-from-mag-ang 1 (/ pi 2)))
 (equ? (make-complex-from-real-imag 1 0) (make-complex-from-mag-ang 1 0))
 (equ? (make-complex-from-real-imag 0 1) (make-complex-from-mag-ang 1 0))
+
+;;; Exercise 2.80
+
+(println "exercise 2.80")
 
