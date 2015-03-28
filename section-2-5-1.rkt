@@ -267,3 +267,30 @@
 
 (println "exercise 2.80")
 
+;; Re-tagging the values and dispatching to equ? so we can take advantage of the recursion on types there.
+(define (install-=zero)
+  ;; installation
+  (put '=zero? '(scheme-number)
+       (lambda (x) (equ? x 0)))
+  (put '=zero? '(rational)
+       (lambda (x) (equ? (attach-tag 'rational x) (make-rational 0 1))))
+  (put '=zero? '(complex)
+       (lambda (x) (equ? (attach-tag 'complex x) (make-complex-from-real-imag 0 0))))
+  'done)
+(install-=zero)
+(define (=zero? x)
+  (apply-generic '=zero? x))
+
+(println "should be true:")
+(=zero? 0)
+(=zero? (make-rational 0 10))
+(=zero? (make-complex-from-real-imag 0 0))
+(=zero? (make-complex-from-mag-ang 0 pi))
+
+(println "should be false:")
+(=zero? 1)
+(=zero? (make-rational 1 10))
+(=zero? (make-complex-from-real-imag 0 1))
+(=zero? (make-complex-from-real-imag 1 0))
+(=zero? (make-complex-from-mag-ang 1 pi))
+
