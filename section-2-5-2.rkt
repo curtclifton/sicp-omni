@@ -34,7 +34,8 @@
     (let ((proc (get op type-tags))) 
       (if proc
           (apply proc (map contents args))
-          (if (= (length args) 2)
+;           (if (= (length args) 2) ; ← text's version
+          (if (and (= (length args) 2) (not (eq? (first type-tags) (second type-tags)))) ; ← ex. 2.82c
               (let ((type1 (car type-tags))
                     (type2 (cadr type-tags))
                     (a1 (car args))
@@ -46,7 +47,7 @@
                         (t2->t1
                          (apply-generic op a1 (t2->t1 a2)))
                         (else
-                         (error "No method for these types"
+                         (error "No method for these types even with coercion"
                                 (list op type-tags))))))
               (error "No method for these types"
                      (list op type-tags)))))))
@@ -223,3 +224,8 @@
 
 (define-values (put-coercion get-coercion) (make-table))
 
+;; Exercise 2.82
+
+; (a) The recursion, it is infinite.
+; (b) apply-generic, as implemented in the text, only tries to coerce arguments of the same type if there is no procedure for a pair of the original types. That's not a problem for the current implementation, though it's about to become one when we expect operations to be inherited.
+; (c) see above
