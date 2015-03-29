@@ -29,26 +29,61 @@
         ((pair? datum) (cdr datum))
         (else (error "Bad tagged datum: CONTENTS" datum))))
 
+;; Text's version, with exercise 2.82c changes:
+; (define (apply-generic op . args)
+;   (let ((type-tags (map type-tag args)))
+;     (let ((proc (get op type-tags))) 
+;       (if proc
+;           (apply proc (map contents args))
+; ;           (if (= (length args) 2) ; ← text's version
+;           (if (and (= (length args) 2) (not (eq? (first type-tags) (second type-tags)))) ; ← ex. 2.82c
+;               (let ((type1 (car type-tags))
+;                     (type2 (cadr type-tags))
+;                     (a1 (car args))
+;                     (a2 (cadr args)))
+;                 (let ((t1->t2 (get-coercion type1 type2))
+;                       (t2->t1 (get-coercion type2 type1)))
+;                   (cond (t1->t2
+;                          (apply-generic op (t1->t2 a1) a2))
+;                         (t2->t1
+;                          (apply-generic op a1 (t2->t1 a2)))
+;                         (else
+;                          (error "No method for these types even with coercion"
+;                                 (list op type-tags))))))
+;               (error "No method for these types"
+;                      (list op type-tags)))))))
+
+(define (install-supertype)
+  (put 'supertype 'scheme-number 'rational)
+  (put 'supertype 'rational 'complex)
+  'done
+  )
+(install-supertype)
+(define (<: type1 type2)
+  (define supertype1 (get 'supertype type1))
+  (cond ((eq? type1 type2) #t)
+        (supertype1 (<: supertype1 type2))
+        (else #f)))
+
 (define (apply-generic op . args)
+  (define (raise-to-type arg type)
+    (if (eq? (type-tag arg) type)
+        arg
+        (raise-to-type (raise arg) type)))
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags))) 
       (if proc
           (apply proc (map contents args))
-;           (if (= (length args) 2) ; ← text's version
-          (if (and (= (length args) 2) (not (eq? (first type-tags) (second type-tags)))) ; ← ex. 2.82c
-              (let ((type1 (car type-tags))
-                    (type2 (cadr type-tags))
-                    (a1 (car args))
-                    (a2 (cadr args)))
-                (let ((t1->t2 (get-coercion type1 type2))
-                      (t2->t1 (get-coercion type2 type1)))
-                  (cond (t1->t2
-                         (apply-generic op (t1->t2 a1) a2))
-                        (t2->t1
-                         (apply-generic op a1 (t2->t1 a2)))
-                        (else
-                         (error "No method for these types even with coercion"
-                                (list op type-tags))))))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (arg1 (car args))
+                    (arg2 (cadr args)))
+                (cond ((eq? type1 type2) (error "no method for pair of " type1))
+                      ((<: type1 type2) (apply-generic op (raise-to-type arg1 type2) arg2))
+                      ((<: type2 type1) (apply-generic op arg1 (raise-to-type arg2 type1)))
+                      (else (error "incomparable types? wat?" type-tags)))
+              )
               (error "No method for these types"
                      (list op type-tags)))))))
 
@@ -233,7 +268,7 @@
 
 (println "exercise 2.83")
 
-;; Do keep this a work system, I'm taking the liberty of omitting a separate 'real' type and just including 'complex' the issues are the same.
+;; To keep this a work system, I'm taking the liberty of omitting a separate 'real' type and just including 'complex' the issues are the same.
 (define (install-raise)
   (define (scheme-number->rational n)
     (make-rational n 1))
@@ -251,3 +286,36 @@
 (raise 1)
 (raise (raise 1))
 (raise (make-rational 1 2))
+
+;;; Exercise 2.84
+
+(println "exercise 2.84")
+
+;; See definition of <: and updated definition of apply-generic above.
+(println "should be true:")
+(<: 'scheme-number 'scheme-number)
+(<: 'scheme-number 'rational)
+(<: 'scheme-number 'complex)
+(<: 'rational 'rational)
+(<: 'rational 'complex)
+(<: 'complex 'complex)
+(println "should be false:")
+(<: 'rational 'scheme-number)
+(<: 'complex 'scheme-number)
+(<: 'complex 'rational)
+
+(println "Let's do math!")
+(define (test-add n m)
+  (println n " + " m " = " (add n m)))
+(define test-sn (make-scheme-number 1))
+(define test-rat (make-rational 2 3))
+(define test-cmplx (make-complex-from-real-imag 4 5))
+(test-add test-sn test-sn)
+(test-add test-sn test-rat)
+(test-add test-sn test-cmplx)
+(test-add test-rat test-sn)
+(test-add test-rat test-rat)
+(test-add test-rat test-cmplx)
+(test-add test-cmplx test-sn)
+(test-add test-cmplx test-rat)
+(test-add test-cmplx test-cmplx)
