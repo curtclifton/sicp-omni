@@ -215,7 +215,6 @@
 (define (make-complex-from-mag-ang r a) 
   ((get 'make-from-mag-ang 'complex) r a))
 
-
 (install-scheme-number-package)
 (install-rational-package)
 (install-rectangular-package)
@@ -224,8 +223,31 @@
 
 (define-values (put-coercion get-coercion) (make-table))
 
-;; Exercise 2.82
+;;; Exercise 2.82
 
-; (a) The recursion, it is infinite.
-; (b) apply-generic, as implemented in the text, only tries to coerce arguments of the same type if there is no procedure for a pair of the original types. That's not a problem for the current implementation, though it's about to become one when we expect operations to be inherited.
-; (c) see above
+;; (a) The recursion, it is infinite.
+;; (b) apply-generic, as implemented in the text, only tries to coerce arguments of the same type if there is no procedure for a pair of the original types. That's not a problem for the current implementation, though it's about to become one when we expect operations to be inherited.
+;; (c) see above
+
+;;; Exercise 2.83
+
+(println "exercise 2.83")
+
+;; Do keep this a work system, I'm taking the liberty of omitting a separate 'real' type and just including 'complex' the issues are the same.
+(define (install-raise)
+  (define (scheme-number->rational n)
+    (make-rational n 1))
+  (define (rational->complex n)
+    (make-complex-from-real-imag (/ (car n) (cdr n)) 0))  
+  ;; install raise procedures
+  (put 'raise '(scheme-number) scheme-number->rational)
+  (put 'raise '(rational) rational->complex)
+  'done
+  )
+(define (raise n)
+  (apply-generic 'raise n))
+(install-raise)
+
+(raise 1)
+(raise (raise 1))
+(raise (make-rational 1 2))
