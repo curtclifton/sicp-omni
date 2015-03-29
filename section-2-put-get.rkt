@@ -1,28 +1,32 @@
 #lang racket
 
-(provide put get)
+(provide put get make-table)
 
-(define lookup-table '())
+(define (make-table)
+  (define lookup-table '())
+  ;; With no concerns for efficiency, just put the new thing on the front of the look-up table:
+  (define (put-tuple tuple)
+    (define-values (key item-list) (split-at tuple (- (length tuple) 1)))
+    (define new-table (cons (cons key (car item-list)) lookup-table))
+    (set! lookup-table new-table))
+  (define (put . args)
+    (if (< (length args) 2)
+        (error "must have at least two arguments to put, 1 or more keys, plus a value")
+        (put-tuple args)))
+  (define (get . args)
+    (define (scan table)
+      (if (null? table)
+          #f
+          (let ((first-entry (car table)))
+            (if (equal? (car first-entry) args)
+                (cdr first-entry)
+                (scan (cdr table))))))
+    (if (null? args)
+        (error "must have at least one or more keys to get")
+        (scan lookup-table)))
+  (values put get))
 
-;; With no concerns for efficiency, just put the new thing on the front of the look-up table:
-(define (put-tuple tuple)
-  (define-values (key item-list) (split-at tuple (- (length tuple) 1)))
-  (define new-table (cons (cons key (car item-list)) lookup-table))
-  (set! lookup-table new-table))
+(define-values (put get) (make-table))
 
-(define (put . args)
-  (if (< (length args) 2)
-      (error "must have at least two arguments to put, 1 or more keys, plus a value")
-      (put-tuple args)))
 
-(define (get . args)
-  (define (scan table)
-    (if (null? table)
-        #f
-        (let ((first-entry (car table)))
-          (if (equal? (car first-entry) args)
-              (cdr first-entry)
-              (scan (cdr table))))))
-  (if (null? args)
-      (error "must have at least one or more keys to get")
-      (scan lookup-table)))
+
