@@ -3,17 +3,6 @@
 (require "helpers.rkt")
 (require "section-2-put-get.rkt")
 
-;; original versions of attach-tag, type-tag, and contents from text
-; (define (attach-tag type-tag contents)
-;   (cons type-tag contents))
-; (define (type-tag datum) 
-;   (if (pair? datum)
-;       (car datum)
-;       (error "Bad tagged datum: TYPE-TAG" datum))) 
-; (define (contents datum)
-;   (if (pair? datum) (cdr datum)
-;       (error "Bad tagged datum: CONTENTS" datum)))
-
 ;; updated versions of attach-tag, type-tag, and contents for exercise 2.78
 ; this seems fairly dreadful, since the 'scheme-number tag was encapsulated in install-scheme-number-package before, but is now coupled
 (define (attach-tag type-tag contents)
@@ -65,11 +54,12 @@
         (supertype1 (<: supertype1 type2))
         (else #f)))
 
+(define (raise-to-type arg type)
+  (if (eq? (type-tag arg) type)
+      arg
+      (raise-to-type (raise arg) type)))
+
 (define (apply-generic op . args)
-  (define (raise-to-type arg type)
-    (if (eq? (type-tag arg) type)
-        arg
-        (raise-to-type (raise arg) type)))
   (let ((type-tags (map type-tag args)))
     (let ((proc (get op type-tags))) 
       (if proc
@@ -202,7 +192,8 @@
   (put 'make-from-real-imag 'polar
        (lambda (x y) (tag (make-from-real-imag x y)))) 
   (put 'make-from-mag-ang 'polar
-       (lambda (r a) (tag (make-from-mag-ang r a)))) 'done)
+       (lambda (r a) (tag (make-from-mag-ang r a)))) 
+  'done)
 
 (define (install-complex-package)
   ;; imported procedures from rectangular and polar packages 
@@ -319,3 +310,68 @@
 (test-add test-cmplx test-sn)
 (test-add test-cmplx test-rat)
 (test-add test-cmplx test-cmplx)
+
+;;; Exercise 2.85
+
+(println "exercise 2.85")
+
+;; Brought over from exercise 2.79
+(define (install-equ)
+  ;; internal procedures
+  (define (equ-number? n m)
+    (if (and (exact? n) (exact? m))
+        (= n m)
+        (< (abs (- n m)) 0.000001)))
+  (define (equ-rational? n m)
+    (and (equ? (car n) (car m))
+         (equ? (cdr n) (cdr m))))
+  (define (equ-complex? a b)
+    (and (equ? (real-part a) (real-part b))
+         (equ? (imag-part a) (imag-part b))))
+  ;; installation
+  (put 'equ? '(scheme-number scheme-number)
+       (lambda (x y) (equ-number? x y)))
+  (put 'equ? '(rational rational)
+       (lambda (x y) (equ-rational? x y)))
+  (put 'equ? '(complex complex)
+       (lambda (x y) (equ-complex? x y)))
+  'done)
+(install-equ)
+(define (equ? x y)
+  (apply-generic 'equ? x y))
+
+;; This is pretty lame. Since I chose not to implement integer and real, there isn't much interesting to do here. I decided to add some gratuitous rounding so the we only simplify to integers or ratios of integers.
+(define (install-project)
+  (define (make-exact n)
+    (inexact->exact (round n)))
+  (define (project-complex n)
+    (make-rational (make-exact (real-part n)) 1))
+  (define (project-rational n)
+    (make-scheme-number (make-exact (/ (car n) (cdr n)))))
+  (put 'project '(complex) project-complex)
+  (put 'project '(rational) project-rational)
+  'done
+  )
+(install-project)
+(define (project n)
+  (apply-generic 'project n))
+
+(define (drop n)
+  (define original-type (type-tag n))
+  (define (drop-further last)
+    (let ((projector (get 'project (list (type-tag last)))))
+      (if (not projector)
+          last
+          (let ((next (projector (contents last))))
+            (if (equ? (raise-to-type next original-type) n)
+                (drop-further next)
+                last)))))
+  (drop-further n))
+
+;; I'm taking a pass on modifying apply-generic yet again. It's a simple matter of wrapping the whole body of the procedure in an application of drop, since drop is a no-op when the argument isn't projectable.
+
+;;; Exercise 2.86
+
+(println "exercise 2.86")
+
+;; I'm gonna skip this one. It's just some fairly tedious work to define generic versions of all the functions used within install-polar and install-rectangular. We'd also need to change the applications of +, -, *, and / in install-complex to use add, sub, mul, and div instead.
