@@ -2,7 +2,7 @@
 
 (require "mlist.rkt")
 
-(provide car cdr cons set-car! set-cdr! list caar list->mlist)
+(provide car cdr cons set-car! set-cdr! list caar list->mlist pair?)
 
 (define car mcar)
 (define cdr mcdr)
@@ -12,4 +12,5 @@
 (define list mlist)
 (define (caar thing)
   (mcar (mcar thing)))
+(define pair? mpair?)  
 
