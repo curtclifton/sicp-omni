@@ -193,6 +193,12 @@
   (if (= count 0)
       '()
       (cons val (repeat val (- count 1)))))
+(define (zero-pad val width)
+  (define (helper val current-width)
+    (if (= current-width width)
+        val
+        (helper (cons 0 val) (+ 1 current-width))))
+  (helper val (length val)))
 (define (test-rca-delay max-width)
   (define (helper width)
     (if (= width (+ max-width 1))
@@ -210,8 +216,8 @@
           (set-bus! a-bus (repeat 1 width))
           (log-with-time "set a-bus to all high")
           (propagate)
-          (set-bus! b-bus (cons 0 (repeat 1 (- width 1))))
-          (log-with-time "set b-bus to 011…")
+          (set-bus! b-bus (zero-pad (mlist 1) width))
+          (log-with-time "set b-bus to 1")
           (propagate)
           (log-with-time "adder stablized")
           (println "------------")
@@ -219,5 +225,4 @@
   (helper 1))
 (test-rca-delay 10)
 
-          
-                    
+; It takes 16 time units per bit for the adder to stablized when a carry has to propagate fully.
