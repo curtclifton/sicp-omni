@@ -3,7 +3,7 @@
 (require "helpers.rkt")
 (require "mcons-all-the-things.rkt")
 
-(provide make-wire and-gate inverter probe propagate set-signal! get-signal after-delay add-action! log-with-time or-gate-delay)
+(provide make-wire and-gate inverter probe propagate set-signal! get-signal after-delay add-action! reset-agenda! log-with-time or-gate-delay)
 
 ;;; This file has most of the provided code from section 3.3.4 of SICP, but re-ordered to define before use. It also includes the queue code from section 3.3.2. Some changes were necessary to make this work in Racket. The adder pieces don't appear until we've defined or-gate in exercise 3.28.
 
@@ -195,7 +195,12 @@
 ;; Test an and-gate
 (define (log-with-time msg)
   (println msg ", time: " (current-time the-agenda)))
+(define (reset-agenda!)
+  (if (empty-agenda? the-agenda)
+      (set! the-agenda (make-agenda))
+      (error "agenda must be empty to reset it")))
 
+(reset-agenda!)
 (define input-1 (make-wire))
 (define input-2 (make-wire))
 (define output (make-wire))
