@@ -1,6 +1,6 @@
 #lang racket
 
-(provide mlist list->mlist)
+(provide mlist list->mlist mlist->list)
 
 (define (mlist . args)
   (list->mlist args))
@@ -10,3 +10,9 @@
       lst
       (mcons (car lst)
              (list->mlist (cdr lst)))))
+
+(define (mlist->list mlst)
+  (if (null? mlst)
+      mlst
+      (cons (mcar mlst)
+            (mlist->list (mcdr mlst)))))
