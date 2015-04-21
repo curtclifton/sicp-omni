@@ -3,7 +3,7 @@
 (require "helpers.rkt")
 (require "mcons-all-the-things.rkt")
 
-;;; This file has all the provided code from section 3.3.4 of SICP, but re-ordered to define before use. It also includes the queue code from section 3.3.2. Some changes were necessary to make this work in Racket.
+;;; This file has most of the provided code from section 3.3.4 of SICP, but re-ordered to define before use. It also includes the queue code from section 3.3.2. Some changes were necessary to make this work in Racket. The adder pieces don't appear until we've defined or-gate in exercise 3.28.
 
 ;;; Queue
 
@@ -154,7 +154,7 @@
   (add-action! 
    wire
    (lambda ()     
-     (println name " " (current-time the-agenda))
+     (println name " at time " (current-time the-agenda))
      (println "    New-value = " (get-signal wire)))))
 
 ;;; Basic gates
@@ -176,7 +176,8 @@
   (add-action! input invert-input)
   'ok)
 
-;; TODO: define logical-and
+(define (logical-and s1 s2)
+  (if (and (= s1 1) (= s2 1)) 1 0))
 
 (define (and-gate a1 a2 output)
   (define (and-action-procedure)
@@ -188,6 +189,23 @@
   (add-action! a1 and-action-procedure)
   (add-action! a2 and-action-procedure)
   'ok)
+
+;; Test an and-gate
+(define input-1 (make-wire))
+(define input-2 (make-wire))
+(define output (make-wire))
+(and-gate input-1 input-2 output)
+(probe 'output output)
+(println "created wires and and-gate, time: " (current-time the-agenda))
+(set-signal! input-1 1)
+(println "raised input-1, time: " (current-time the-agenda))
+(propagate)
+(set-signal! input-2 1)
+(println "raised input-2, time: " (current-time the-agenda))
+(propagate)
+(set-signal! input-2 0)
+(println "lowered input-2, time: " (current-time the-agenda))
+(propagate)
 
 ;; TODO: define or-gate, logical-or
 
